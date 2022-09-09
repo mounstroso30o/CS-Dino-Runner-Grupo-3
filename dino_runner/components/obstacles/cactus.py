@@ -12,7 +12,7 @@ class Cactus(Obstacle):
         elif(self.shufle == 1):
             self.type = random.randint(0, 2)
             super().__init__(image2, self.type)#iniciaos nuestra clase padre 
-            self.rect.y = 325
+            self.rect.y = 325 
             
     
 
