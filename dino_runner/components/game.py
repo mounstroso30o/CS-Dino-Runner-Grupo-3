@@ -1,11 +1,15 @@
 from email import message
+from sys import implementation
 from tkinter.font import Font
 import pygame
 
+from dino_runner.components.heart.life import Life
+from dino_runner.components.heart.life_manager import LifeManager
 from dino_runner.components.dinosaur import Dinosaur
+from dino_runner.components.ornaments.cloud import Cloud
 from dino_runner.components.obstacles.obstacle_manager import ObstacleManager
 from dino_runner.components.power_ups.power_up_manager import PowerUpManager
-from dino_runner.utils.constants import BG, DEFAULT_TYPE, FONT_STYLE, ICON, SCREEN_HEIGHT, SCREEN_WIDTH, TITLE, FPS
+from dino_runner.utils.constants import BG, DEFAULT_TYPE, FONT_STYLE, ICON, numbers_life, SCREEN_HEIGHT, SCREEN_WIDTH, TITLE, FPS
 
 
 class Game:
@@ -15,6 +19,10 @@ class Game:
         pygame.display.set_icon(ICON)
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         self.clock = pygame.time.Clock()
+        self.cloud = Cloud()
+        self.life = Life()
+        self.life_manager = LifeManager()
+        self.lifes = numbers_life
         self.playing = False
         self.game_speed = 20
         self.x_pos_bg = 0
@@ -23,7 +31,6 @@ class Game:
         self.player = Dinosaur()
         self.obstacle_manager = ObstacleManager()
         self.power_up_manager = PowerUpManager() 
-
         self.running =  False
         self.score = 0
         self.death_count = 0
@@ -35,24 +42,26 @@ class Game:
             if not self.playing:
                 self.show_menu()
                 self.reset_game()
-
+                self.lifes = numbers_life  # resetea nro de vidas
         pygame.display.quit()
         pygame.quit()
 
     def run(self):
         # Game loop: events - update - draw
         self.playing = True
-        #self.reset_game()
         while self.playing:
             self.events()
             self.update()
             self.draw()
             
     def events(self):
+        self.cloud.update(self.game_speed)
         for event in pygame.event.get(): # nos devuelve una lista de eventos 
             if event.type == pygame.QUIT: #quit es de tipo entero y es una constante q ua no se este jugando
                 self.playing = False 
                 self.running = False
+
+            
             
     def update(self):
         self.update_score()
@@ -67,6 +76,7 @@ class Game:
             self.game_speed += 5 
         
     def draw(self):
+        
         self.clock.tick(FPS) # numero de actualizaciones por segundo 
         self.screen.fill((255, 255, 255)) #screen es la ventana fill es para el color 
         self.draw_background() 
@@ -75,6 +85,10 @@ class Game:
         self.player.draw(self.screen)
         self.obstacle_manager.draw(self.screen)
         self.power_up_manager.draw(self.screen)
+        self.cloud.draw(self.screen)
+        for x in range(0, self.lifes):  # dibujamos el numero de vidas que queremos
+            self.life.draw(self.screen)  # dibuja el corazon
+            self.life.coordinates(self.lifes)  # actualizamos las coordenadas
         pygame.display.update()
         pygame.display.flip()
 
@@ -99,7 +113,7 @@ class Game:
         if self.player.has_power_up:
             time_to_show = round((self.player.power_up_time_up - pygame.time.get_ticks()) / 1000, 2)
             if time_to_show >= 0:
-                print("hola")
+               
                 font = pygame.font.Font(FONT_STYLE, 30)
                 message = f"{self.player.type.capitalize()} enabled for {time_to_show} seconds,"
                 text = font.render(message,True,(0,0,0))
@@ -121,6 +135,7 @@ class Game:
                 
             elif event.type == pygame.KEYDOWN:
                 self.run()
+
 
     def show_menu(self):
         self.screen.fill((255, 255, 255))
@@ -158,4 +173,5 @@ class Game:
         self.power_up_manager.reset_power_ups() 
         self.game_speed = 20
         self.score = 0
-        self.playing= False
+        self.player.has_power_up = False
+        self.player.type = DEFAULT_TYPE

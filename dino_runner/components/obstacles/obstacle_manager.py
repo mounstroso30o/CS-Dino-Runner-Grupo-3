@@ -4,11 +4,13 @@ import pygame
 
 from dino_runner.components.obstacles.cactus import Cactus
 from dino_runner.components.obstacles.bird import Bird
-from dino_runner.utils.constants import SHIELD_TYPE, SMALL_CACTUS, LARGE_CACTUS, BIRD
+from dino_runner.utils.constants import DINO_DEAD, HAMMER_TYPE, SHIELD_TYPE, SMALL_CACTUS, LARGE_CACTUS, BIRD, numbers_life
 
 class ObstacleManager:
     def __init__(self):
         self.obstacles= []
+        self.lifes = numbers_life
+        self.game_speed = 20
         
     def update(self, game):
         if len(self.obstacles) == 0:
@@ -21,16 +23,17 @@ class ObstacleManager:
         for obstacle in self.obstacles:
             obstacle.update(game.game_speed, self.obstacles)
             if game.player.dino_rect.colliderect(obstacle.rect):
-                if game.player.type != SHIELD_TYPE:
-                    pygame.time.delay(500)
-                    game.last_score = game.score
+                if game.player.type == SHIELD_TYPE or game.player.type == HAMMER_TYPE:
+                    self.obstacles.remove(obstacle)
+                    
+                elif game.lifes > 1:
+                    self.obstacles.remove(obstacle)
+                    game.lifes -= 1 
+                else: 
                     game.playing = False
                     game.death_count += 1 
-                    game.score = 0
+                    game.last_score = game.score
                     break
-
-                else: 
-                    self.obstacles.remove(obstacle)
         
     def draw(self, screen):
         for obstacle in self.obstacles:
